@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(64) NOT NULL UNIQUE,
@@ -5,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'tech',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS applications (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -24,7 +26,7 @@ CREATE TABLE IF NOT EXISTS applications (
     fornecedor VARCHAR(100) NULL,
     business_application_snow VARCHAR(150) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,7 +35,7 @@ CREATE TABLE IF NOT EXISTS contacts (
     email_cast VARCHAR(120) NULL,
     email_tereos VARCHAR(120) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS contact_applications (
     contact_id INT NOT NULL,
@@ -41,7 +43,7 @@ CREATE TABLE IF NOT EXISTS contact_applications (
     PRIMARY KEY (contact_id, application_id),
     CONSTRAINT fk_contact_app_contact FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE CASCADE,
     CONSTRAINT fk_contact_app_application FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS on_calls (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,7 +53,7 @@ CREATE TABLE IF NOT EXISTS on_calls (
     end_date DATETIME NOT NULL,
     observation VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS application_documents (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -63,7 +65,7 @@ CREATE TABLE IF NOT EXISTS application_documents (
     uploaded_by VARCHAR(64) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_doc_application FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE CASCADE
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS supplier_contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,7 +77,7 @@ CREATE TABLE IF NOT EXISTS supplier_contacts (
     empresa VARCHAR(120) NULL,
     aplicacoes_referencia VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS supplier_support_contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -86,4 +88,4 @@ CREATE TABLE IF NOT EXISTS supplier_support_contacts (
     observacao VARCHAR(255) NULL,
     portal_link VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

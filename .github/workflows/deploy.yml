@@ -34,6 +34,7 @@ jobs:
             done
 
             # APLICA ESTRUTURA E DADOS VERSIONADOS DO GITHUB
-            docker compose exec -T db mysql -uktcast -pktcast123 kt_cast < docker/mysql/init/01-schema.sql
-            docker compose exec -T db mysql -uktcast -pktcast123 kt_cast < docker/mysql/init/03-data-seed.sql
-            docker compose exec -T db mysql -uktcast -pktcast123 kt_cast < docker/mysql/init/99-manual-contacts.sql
+            docker compose exec -T db mysql --default-character-set=utf8mb4 -uktcast -pktcast123 kt_cast < docker/mysql/init/01-schema.sql
+            docker compose exec -T db mysql --default-character-set=utf8mb4 -uktcast -pktcast123 kt_cast < docker/mysql/init/03-data-seed.sql
+            docker compose exec -T db mysql --default-character-set=utf8mb4 -uktcast -pktcast123 kt_cast < docker/mysql/init/99-manual-contacts.sql
+            docker compose exec -T db mysql --default-character-set=utf8mb4 -uktcast -pktcast123 kt_cast < docker/mysql/init/04-data-fix.sql
