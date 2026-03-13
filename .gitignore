@@ -1,0 +1,47 @@
+# ── Ambiente e credenciais ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Uploads gerados em runtime (arquivos de usuários) ──────────────────────────
+uploads/*
+!uploads/.gitkeep
+
+# ── Python (resquícios de migração) ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# ── PHP ────────────────────────────────────────────────────────────────────────
+vendor/
+
+# ── Node (caso Tailwind seja compilado localmente no futuro) ───────────────────
+node_modules/
+npm-debug.log*
+
+# ── Downloads incompletos e temporários ───────────────────────────────────────
+*.crdownload
+*.part
+~$*
+
+# ── Sistemas operacionais ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDEs e editores ────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+
+# ── Logs ───────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Docker (volumes locais) ────────────────────────────────────────────────────
+docker/mysql/data/

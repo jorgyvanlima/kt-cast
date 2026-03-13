@@ -1,0 +1,42 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: kt-cast-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: kt_cast
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: ktcast
+      MYSQL_PASSWORD: ktcast123
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    container_name: kt-cast-web
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      APP_ENV: development
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: kt_cast
+      DB_USERNAME: ktcast
+      DB_PASSWORD: ktcast123
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_data:
