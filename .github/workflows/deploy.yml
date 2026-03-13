@@ -26,3 +26,14 @@ jobs:
             # FORÇA A VERSÃO DA API E RECONSTRÓI/REINICIA OS CONTAINERS DOCKER
             export DOCKER_API_VERSION=1.41
             docker compose up -d --build
+
+            # AGUARDA O MYSQL FICAR PRONTO
+            until docker compose exec -T db mysqladmin ping -h localhost -proot_password --silent; do
+              echo "Aguardando MySQL..."
+              sleep 3
+            done
+
+            # APLICA ESTRUTURA E DADOS VERSIONADOS DO GITHUB
+            docker compose exec -T db mysql -uktcast -pktcast123 kt_cast < docker/mysql/init/01-schema.sql
+            docker compose exec -T db mysql -uktcast -pktcast123 kt_cast < docker/mysql/init/03-data-seed.sql
+            docker compose exec -T db mysql -uktcast -pktcast123 kt_cast < docker/mysql/init/99-manual-contacts.sql
