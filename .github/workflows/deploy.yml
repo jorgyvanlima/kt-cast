@@ -1,0 +1,28 @@
+name: Deploy to GCP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # NAVEGUE ATÉ A PASTA DO PROJETO (AJUSTE SE O NOME DA PASTA FOR DIFERENTE)
+            cd ~/kt-cast
+            
+            # PUXA A VERSÃO MAIS RECENTE DO GITHUB
+            git pull origin main
+            
+            # FORÇA A VERSÃO DA API E RECONSTRÓI/REINICIA OS CONTAINERS DOCKER
+            export DOCKER_API_VERSION=1.41
+            docker compose up -d --build
