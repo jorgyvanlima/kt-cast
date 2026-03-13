@@ -61,8 +61,8 @@ if ($path === '/applications') {
 
     if ($search !== '') {
         $like = '%' . $search . '%';
-        $stmt = $pdo->prepare('SELECT * FROM applications WHERE name LIKE ? OR analista_cast_n2 LIKE ? OR analista_tereos_n2 LIKE ? OR fornecedor LIKE ? ORDER BY name');
-        $stmt->execute([$like, $like, $like, $like]);
+        $stmt = $pdo->prepare('SELECT * FROM applications WHERE name LIKE ? OR analista_cast_n2 LIKE ? OR analista_tereos_n2 LIKE ? OR n2_track LIKE ? OR fornecedor LIKE ? ORDER BY name');
+        $stmt->execute([$like, $like, $like, $like, $like]);
         $applications = $stmt->fetchAll();
     } else {
         $applications = $pdo->query('SELECT * FROM applications ORDER BY name')->fetchAll();

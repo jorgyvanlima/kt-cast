@@ -13,7 +13,7 @@
                 name="search"
                 type="text"
                 value="<?= h($search ?? '') ?>"
-                placeholder="Buscar por nome, analista CAST, analista Tereos ou fornecedor"
+                placeholder="Buscar por nome, analista CAST, analista Tereos, esteira ou fornecedor"
                 class="w-full md:max-w-xl border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
             <div class="flex gap-2">
