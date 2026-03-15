@@ -185,44 +185,66 @@ if (preg_match('#^/applications/(\d+)/documents/upload$#', $path, $matches) && $
     $application = $stmt->fetch();
     if (!$application) { http_response_code(404); exit('Aplicação não encontrada.'); }
 
-    if (!isset($_FILES['document']) || $_FILES['document']['error'] !== UPLOAD_ERR_OK) {
-        flash('Erro ao enviar o arquivo. Tente novamente.', 'danger');
+    $note = trim((string) ($_POST['note'] ?? ''));
+    $hasFile = isset($_FILES['document']) && ($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+    if (!$hasFile && $note === '') {
+        flash('Envie um arquivo ou preencha uma nota/texto.', 'danger');
         redirect_to("/applications/{$appId}/documents");
     }
 
-    $file = $_FILES['document'];
-    $originalName = basename($file['name']);
-    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $originalName = 'Nota sem anexo';
+    $storedName = null;
+    $mimeType = null;
+    $fileSize = null;
 
-    $allowed = ['pdf','doc','docx','odt','xls','xlsx','ods','ppt','pptx','odp','txt','png','jpg','jpeg','zip','rar','7z','csv','md'];
-    if (!in_array($ext, $allowed, true)) {
-        flash('Tipo de arquivo não permitido.', 'danger');
-        redirect_to("/applications/{$appId}/documents");
+    if ($hasFile) {
+        if (($_FILES['document']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            flash('Erro ao enviar o arquivo. Tente novamente.', 'danger');
+            redirect_to("/applications/{$appId}/documents");
+        }
+
+        $file = $_FILES['document'];
+        $originalName = basename($file['name']);
+        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+        $allowed = ['pdf','doc','docx','odt','xls','xlsx','ods','ppt','pptx','odp','txt','png','jpg','jpeg','zip','rar','7z','csv','md'];
+        if (!in_array($ext, $allowed, true)) {
+            flash('Tipo de arquivo não permitido.', 'danger');
+            redirect_to("/applications/{$appId}/documents");
+        }
+
+        $maxSize = 50 * 1024 * 1024; // 50 MB
+        if (($file['size'] ?? 0) > $maxSize) {
+            flash('Arquivo muito grande. Limite: 50 MB.', 'danger');
+            redirect_to("/applications/{$appId}/documents");
+        }
+
+        $uploadDir = BASE_PATH . '/uploads/';
+        if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
+
+        $storedName = uniqid('doc_', true) . '.' . $ext;
+        if (!move_uploaded_file($file['tmp_name'], $uploadDir . $storedName)) {
+            flash('Falha ao salvar o arquivo no servidor.', 'danger');
+            redirect_to("/applications/{$appId}/documents");
+        }
+
+        $mimeType = $file['type'] ?? null;
+        $fileSize = isset($file['size']) ? (int) $file['size'] : null;
     }
 
-    $maxSize = 50 * 1024 * 1024; // 50 MB
-    if ($file['size'] > $maxSize) {
-        flash('Arquivo muito grande. Limite: 50 MB.', 'danger');
-        redirect_to("/applications/{$appId}/documents");
-    }
-
-    $uploadDir = BASE_PATH . '/uploads/';
-    if (!is_dir($uploadDir)) { mkdir($uploadDir, 0755, true); }
-
-    $storedName = uniqid('doc_', true) . '.' . $ext;
-    move_uploaded_file($file['tmp_name'], $uploadDir . $storedName);
-
-    $stmt = $pdo->prepare('INSERT INTO application_documents (application_id, original_name, stored_name, mime_type, file_size, uploaded_by) VALUES (?, ?, ?, ?, ?, ?)');
+    $stmt = $pdo->prepare('INSERT INTO application_documents (application_id, original_name, stored_name, note, mime_type, file_size, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
     $stmt->execute([
         $appId,
         $originalName,
         $storedName,
-        $file['type'],
-        $file['size'],
+        $note !== '' ? $note : null,
+        $mimeType,
+        $fileSize,
         $_SESSION['user']['username'] ?? 'sistema',
     ]);
 
-    flash("Documento \"{$originalName}\" enviado com sucesso.", 'success');
+    flash('Registro de documento salvo com sucesso.', 'success');
     redirect_to("/applications/{$appId}/documents");
 }
 
@@ -235,6 +257,11 @@ if (preg_match('#^/applications/(\d+)/documents/(\d+)/download$#', $path, $match
     $doc = $stmt->fetch();
 
     if (!$doc) { http_response_code(404); exit('Documento não encontrado.'); }
+
+    if (empty($doc['stored_name'])) {
+        flash('Este registro é apenas nota e não possui arquivo para download.', 'warning');
+        redirect_to("/applications/{$appId}/documents");
+    }
 
     $filePath = BASE_PATH . '/uploads/' . $doc['stored_name'];
     if (!file_exists($filePath)) { http_response_code(404); exit('Arquivo não encontrado no servidor.'); }
@@ -394,7 +421,15 @@ if ($path === '/supplier-contacts') {
         'suporte' => $supportContacts,
     ];
 
-    foreach ($allSuppliers as $row) {
+    foreach ($allSuppliers as &$row) {
+        $row['nome'] = normalize_utf8_text($row['nome'] ?? null);
+        $row['referencia_escalacao'] = normalize_utf8_text($row['referencia_escalacao'] ?? null);
+        $row['cargo_referencia'] = normalize_utf8_text($row['cargo_referencia'] ?? null);
+        $row['email'] = normalize_utf8_text($row['email'] ?? null);
+        $row['telefone'] = normalize_utf8_text($row['telefone'] ?? null);
+        $row['empresa'] = normalize_utf8_text($row['empresa'] ?? null);
+        $row['aplicacoes_referencia'] = normalize_utf8_text($row['aplicacoes_referencia'] ?? null);
+
         $bucket = $normalizeEscalacao($row['referencia_escalacao'] ?? null);
         if ($bucket === 'ALTA') {
             $tables['alta'][] = $row;
@@ -406,6 +441,18 @@ if ($path === '/supplier-contacts') {
             $tables['outros'][] = $row;
         }
     }
+    unset($row);
+
+    foreach ($supportContacts as &$row) {
+        $row['tipo'] = normalize_utf8_text($row['tipo'] ?? null);
+        $row['numero'] = normalize_utf8_text($row['numero'] ?? null);
+        $row['fornecedor'] = normalize_utf8_text($row['fornecedor'] ?? null);
+        $row['aplicacao'] = normalize_utf8_text($row['aplicacao'] ?? null);
+        $row['observacao'] = normalize_utf8_text($row['observacao'] ?? null);
+    }
+    unset($row);
+
+    $tables['suporte'] = $supportContacts;
 
     render('contacts/suppliers', [
         'title' => 'Contatos Fornecedores',
@@ -418,13 +465,13 @@ if ($path === '/supplier-contacts/new') {
     if ($method === 'POST') {
         verify_csrf();
 
-        $nome = trim((string) ($_POST['nome'] ?? ''));
-        $referenciaEscalacao = trim((string) ($_POST['referencia_escalacao'] ?? ''));
-        $cargoReferencia = trim((string) ($_POST['cargo_referencia'] ?? ''));
-        $email = trim((string) ($_POST['email'] ?? ''));
-        $telefone = trim((string) ($_POST['telefone'] ?? ''));
-        $empresa = trim((string) ($_POST['empresa'] ?? ''));
-        $aplicacoesReferencia = trim((string) ($_POST['aplicacoes_referencia'] ?? ''));
+        $nome = trim((string) normalize_utf8_text((string) ($_POST['nome'] ?? '')));
+        $referenciaEscalacao = trim((string) normalize_utf8_text((string) ($_POST['referencia_escalacao'] ?? '')));
+        $cargoReferencia = trim((string) normalize_utf8_text((string) ($_POST['cargo_referencia'] ?? '')));
+        $email = trim((string) normalize_utf8_text((string) ($_POST['email'] ?? '')));
+        $telefone = trim((string) normalize_utf8_text((string) ($_POST['telefone'] ?? '')));
+        $empresa = trim((string) normalize_utf8_text((string) ($_POST['empresa'] ?? '')));
+        $aplicacoesReferencia = trim((string) normalize_utf8_text((string) ($_POST['aplicacoes_referencia'] ?? '')));
 
         if ($nome === '') {
             flash('O nome é obrigatório.', 'danger');
@@ -485,13 +532,13 @@ if (preg_match('#^/supplier-contacts/(\d+)/edit$#', $path, $matches)) {
     if ($method === 'POST') {
         verify_csrf();
 
-        $nome = trim((string) ($_POST['nome'] ?? ''));
-        $referenciaEscalacao = trim((string) ($_POST['referencia_escalacao'] ?? ''));
-        $cargoReferencia = trim((string) ($_POST['cargo_referencia'] ?? ''));
-        $email = trim((string) ($_POST['email'] ?? ''));
-        $telefone = trim((string) ($_POST['telefone'] ?? ''));
-        $empresa = trim((string) ($_POST['empresa'] ?? ''));
-        $aplicacoesReferencia = trim((string) ($_POST['aplicacoes_referencia'] ?? ''));
+        $nome = trim((string) normalize_utf8_text((string) ($_POST['nome'] ?? '')));
+        $referenciaEscalacao = trim((string) normalize_utf8_text((string) ($_POST['referencia_escalacao'] ?? '')));
+        $cargoReferencia = trim((string) normalize_utf8_text((string) ($_POST['cargo_referencia'] ?? '')));
+        $email = trim((string) normalize_utf8_text((string) ($_POST['email'] ?? '')));
+        $telefone = trim((string) normalize_utf8_text((string) ($_POST['telefone'] ?? '')));
+        $empresa = trim((string) normalize_utf8_text((string) ($_POST['empresa'] ?? '')));
+        $aplicacoesReferencia = trim((string) normalize_utf8_text((string) ($_POST['aplicacoes_referencia'] ?? '')));
 
         if ($nome === '') {
             flash('O nome é obrigatório.', 'danger');
@@ -573,21 +620,35 @@ if ($path === '/schedule') {
 }
 
 if ($path === '/schedule/new') {
+    $contacts = all_contacts();
+
     if ($method === 'POST') {
         verify_csrf();
+        $contactId = (int) ($_POST['contact_id'] ?? 0);
         $start = trim((string) ($_POST['start_date'] ?? '')) . ' ' . trim((string) ($_POST['start_time'] ?? '')) . ':00';
         $end = trim((string) ($_POST['end_date'] ?? '')) . ' ' . trim((string) ($_POST['end_time'] ?? '')) . ':00';
 
-        if (strtotime($end) <= strtotime($start)) {
-            flash('A data/hora final deve ser maior que a inicial.', 'danger');
-            render('schedule/form', ['title' => 'Nova Escala']);
+        $contactStmt = $pdo->prepare('SELECT id, name, celular FROM contacts WHERE id = ?');
+        $contactStmt->execute([$contactId]);
+        $contact = $contactStmt->fetch();
+
+        if (!$contact) {
+            flash('Selecione um analista válido da tabela de contatos.', 'danger');
+            render('schedule/form', ['title' => 'Nova Escala', 'contacts' => $contacts, 'selectedContactId' => $contactId]);
             exit;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO on_calls (analyst_name, phone, start_date, end_date, observation) VALUES (?, ?, ?, ?, ?)');
+        if (strtotime($end) <= strtotime($start)) {
+            flash('A data/hora final deve ser maior que a inicial.', 'danger');
+            render('schedule/form', ['title' => 'Nova Escala', 'contacts' => $contacts, 'selectedContactId' => $contactId]);
+            exit;
+        }
+
+        $stmt = $pdo->prepare('INSERT INTO on_calls (contact_id, analyst_name, phone, start_date, end_date, observation) VALUES (?, ?, ?, ?, ?, ?)');
         $stmt->execute([
-            trim((string) ($_POST['analyst_name'] ?? '')),
-            trim((string) ($_POST['phone'] ?? '')),
+            (int) $contact['id'],
+            trim((string) $contact['name']),
+            trim((string) ($contact['celular'] ?? '')),
             $start,
             $end,
             trim((string) ($_POST['observation'] ?? '')),
@@ -596,7 +657,7 @@ if ($path === '/schedule/new') {
         redirect_to('/schedule');
     }
 
-    render('schedule/form', ['title' => 'Nova Escala']);
+    render('schedule/form', ['title' => 'Nova Escala', 'contacts' => $contacts, 'selectedContactId' => 0]);
     exit;
 }
 

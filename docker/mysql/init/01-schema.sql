@@ -47,19 +47,22 @@ CREATE TABLE IF NOT EXISTS contact_applications (
 
 CREATE TABLE IF NOT EXISTS on_calls (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    contact_id INT NULL,
     analyst_name VARCHAR(100) NOT NULL,
     phone VARCHAR(30) NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     observation VARCHAR(255) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_on_calls_contact FOREIGN KEY (contact_id) REFERENCES contacts(id) ON DELETE SET NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS application_documents (
     id INT AUTO_INCREMENT PRIMARY KEY,
     application_id INT NOT NULL,
     original_name VARCHAR(255) NOT NULL,
-    stored_name VARCHAR(255) NOT NULL,
+    stored_name VARCHAR(255) NULL,
+    note TEXT NULL,
     mime_type VARCHAR(100) NULL,
     file_size INT NULL,
     uploaded_by VARCHAR(64) NULL,

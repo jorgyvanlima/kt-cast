@@ -3,8 +3,23 @@
     <form method="post" class="p-6 space-y-6">
         <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">Analista</label><input name="analyst_name" class="w-full border rounded px-3 py-2" required></div>
-            <div><label class="block text-sm font-medium text-gray-700 mb-1">Telefone</label><input name="phone" class="w-full border rounded px-3 py-2"></div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Analista (contatos N2)</label>
+                <select id="contact-select" name="contact_id" class="w-full border rounded px-3 py-2" required>
+                    <option value="">Selecione...</option>
+                    <?php foreach (($contacts ?? []) as $contact): ?>
+                        <option value="<?= h((string) $contact['id']) ?>"
+                                data-phone="<?= h((string) ($contact['celular'] ?? '')) ?>"
+                                <?= ((int) ($selectedContactId ?? 0) === (int) $contact['id']) ? 'selected' : '' ?>>
+                            <?= h($contact['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Telefone (automatico)</label>
+                <input id="contact-phone" class="w-full border rounded px-3 py-2 bg-gray-100" readonly>
+            </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -29,3 +44,22 @@
         </div>
     </form>
 </div>
+
+<script>
+(function () {
+    const selectEl = document.getElementById('contact-select');
+    const phoneEl = document.getElementById('contact-phone');
+
+    if (!selectEl || !phoneEl) {
+        return;
+    }
+
+    const syncPhone = () => {
+        const option = selectEl.options[selectEl.selectedIndex];
+        phoneEl.value = option ? (option.dataset.phone || '') : '';
+    };
+
+    selectEl.addEventListener('change', syncPhone);
+    syncPhone();
+})();
+</script>

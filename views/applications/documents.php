@@ -9,6 +9,10 @@ function fmt_bytes(int $bytes): string {
 }
 
 function doc_icon(string $filename): string {
+    if ($filename === 'Nota sem anexo') {
+        return 'fa-note-sticky text-amber-500';
+    }
+
     $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     return match($ext) {
         'pdf'           => 'fa-file-pdf text-red-500',
@@ -53,24 +57,34 @@ function doc_icon(string $filename): string {
             <form method="post"
                   action="/applications/<?= h($application['id']) ?>/documents/upload"
                   enctype="multipart/form-data"
-                  class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                  class="space-y-3">
                 <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
 
-                <label class="flex-1 w-full">
-                    <div id="drop-zone"
-                         class="border-2 border-dashed border-gray-300 rounded-lg px-4 py-4 text-center cursor-pointer hover:border-orange-400 transition-colors">
-                        <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
-                        <p class="text-sm text-gray-500">Clique para selecionar ou arraste o arquivo aqui</p>
-                        <p id="file-name" class="text-xs text-orange-600 font-medium mt-1 hidden"></p>
-                    </div>
-                          <input id="file-input" type="file" name="document" class="hidden" required
-                              accept=".pdf,.doc,.docx,.odt,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.txt,.png,.jpg,.jpeg,.zip,.rar,.7z,.csv,.md">
-                </label>
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                    <label class="flex-1 w-full">
+                        <div id="drop-zone"
+                             class="border-2 border-dashed border-gray-300 rounded-lg px-4 py-4 text-center cursor-pointer hover:border-orange-400 transition-colors">
+                            <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
+                            <p class="text-sm text-gray-500">Clique para selecionar ou arraste o arquivo aqui</p>
+                            <p id="file-name" class="text-xs text-orange-600 font-medium mt-1 hidden"></p>
+                        </div>
+                        <input id="file-input" type="file" name="document" class="hidden"
+                               accept=".pdf,.doc,.docx,.odt,.xls,.xlsx,.ods,.ppt,.pptx,.odp,.txt,.png,.jpg,.jpeg,.zip,.rar,.7z,.csv,.md">
+                    </label>
 
-                <button type="submit"
-                        class="shrink-0 bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2">
-                    <i class="fas fa-upload"></i> Enviar
-                </button>
+                    <button type="submit"
+                            class="shrink-0 bg-orange-500 hover:bg-orange-600 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center gap-2">
+                        <i class="fas fa-upload"></i> Salvar
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Texto/nota (opcional)</label>
+                    <textarea name="note" rows="3"
+                              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Inclua observações, dicas ou procedimentos rápidos aqui."></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Você pode enviar somente texto, somente arquivo, ou os dois juntos.</p>
+                </div>
             </form>
             <p class="text-xs text-gray-400 mt-2">
                 Formatos aceitos: PDF, Word (DOC/DOCX/ODT), Excel (XLS/XLSX/ODS), PowerPoint (PPT/PPTX/ODP), imagens, ZIP, TXT, CSV, MD. Tamanho máximo: 50 MB.
@@ -95,18 +109,27 @@ function doc_icon(string $filename): string {
                                         <?= h($doc['original_name']) ?>
                                     </p>
                                     <p class="text-xs text-gray-400">
-                                        <?= fmt_bytes((int) $doc['file_size']) ?>
-                                        &bull; enviado por <strong><?= h($doc['uploaded_by']) ?></strong>
+                                        <?php if (!empty($doc['stored_name']) && (int) ($doc['file_size'] ?? 0) > 0): ?>
+                                            <?= fmt_bytes((int) $doc['file_size']) ?>
+                                        <?php else: ?>
+                                            registro sem anexo
+                                        <?php endif; ?>
+                                        &bull; enviado por <strong><?= h($doc['uploaded_by'] ?? 'sistema') ?></strong>
                                         &bull; <?= date('d/m/Y H:i', strtotime($doc['created_at'])) ?>
                                     </p>
+                                    <?php if (!empty($doc['note'])): ?>
+                                        <p class="text-xs text-gray-600 mt-1 whitespace-pre-line"><?= h($doc['note']) ?></p>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 shrink-0 ml-4">
-                                <a href="/applications/<?= h($application['id']) ?>/documents/<?= h($doc['id']) ?>/download"
-                                   class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-3 py-1 text-xs font-medium transition-colors"
-                                   title="Baixar documento">
-                                    <i class="fas fa-download"></i> Baixar
-                                </a>
+                                <?php if (!empty($doc['stored_name'])): ?>
+                                    <a href="/applications/<?= h($application['id']) ?>/documents/<?= h($doc['id']) ?>/download"
+                                       class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-3 py-1 text-xs font-medium transition-colors"
+                                       title="Baixar documento">
+                                        <i class="fas fa-download"></i> Baixar
+                                    </a>
+                                <?php endif; ?>
                                 <form method="post"
                                       action="/applications/<?= h($application['id']) ?>/documents/<?= h($doc['id']) ?>/delete"
                                       class="inline"
