@@ -484,6 +484,9 @@ $normalizeEscalacao = static function (?string $value): string {
     if (str_contains($normalized, 'BAIXA')) {
         return 'BAIXA';
     }
+    if (str_contains($normalized, 'SUPORTE')) {
+        return 'SUPORTE';
+    }
 
     return 'OUTROS';
 };
@@ -554,6 +557,7 @@ if ($path === '/supplier-contacts/new') {
         $telefone = trim((string) normalize_utf8_text((string) ($_POST['telefone'] ?? '')));
         $empresa = trim((string) normalize_utf8_text((string) ($_POST['empresa'] ?? '')));
         $aplicacoesReferencia = trim((string) normalize_utf8_text((string) ($_POST['aplicacoes_referencia'] ?? '')));
+        $bucket = $normalizeEscalacao($referenciaEscalacao);
 
         if ($nome === '') {
             flash('O nome é obrigatório.', 'danger');
@@ -567,26 +571,50 @@ if ($path === '/supplier-contacts/new') {
             exit;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO supplier_contacts (nome, referencia_escalacao, cargo_referencia, email, telefone, empresa, aplicacoes_referencia) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $stmt->execute([
-            $nome,
-            $referenciaEscalacao !== '' ? $referenciaEscalacao : null,
-            $cargoReferencia !== '' ? $cargoReferencia : null,
-            $email !== '' ? $email : null,
-            $telefone !== '' ? $telefone : null,
-            $empresa !== '' ? $empresa : null,
-            $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
-        ]);
+        if ($bucket === 'SUPORTE') {
+            $observacaoParts = [];
+            if ($empresa !== '') {
+                $observacaoParts[] = 'Empresa: ' . $empresa;
+            }
+            if ($email !== '') {
+                $observacaoParts[] = 'E-mail: ' . $email;
+            }
 
-        $bucket = $normalizeEscalacao($referenciaEscalacao);
-        $anchor = match ($bucket) {
-            'ALTA' => 'sec-alta',
-            'MEDIA' => 'sec-media',
-            'BAIXA' => 'sec-baixa',
-            default => 'sec-outros',
-        };
+            $portalLink = (str_starts_with(strtolower($email), 'http://') || str_starts_with(strtolower($email), 'https://')) ? $email : null;
+            $observacao = implode(' | ', $observacaoParts);
 
-        flash('Contato fornecedor cadastrado com sucesso.', 'success');
+            $stmt = $pdo->prepare('INSERT INTO supplier_support_contacts (tipo, numero, fornecedor, aplicacao, observacao, portal_link) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt->execute([
+                $cargoReferencia !== '' ? $cargoReferencia : null,
+                $telefone !== '' ? $telefone : null,
+                $nome,
+                $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
+                $observacao !== '' ? $observacao : null,
+                $portalLink,
+            ]);
+            $anchor = 'sec-suporte';
+            flash('Contato de suporte cadastrado com sucesso.', 'success');
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO supplier_contacts (nome, referencia_escalacao, cargo_referencia, email, telefone, empresa, aplicacoes_referencia) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $stmt->execute([
+                $nome,
+                $referenciaEscalacao !== '' ? $referenciaEscalacao : null,
+                $cargoReferencia !== '' ? $cargoReferencia : null,
+                $email !== '' ? $email : null,
+                $telefone !== '' ? $telefone : null,
+                $empresa !== '' ? $empresa : null,
+                $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
+            ]);
+
+            $anchor = match ($bucket) {
+                'ALTA' => 'sec-alta',
+                'MEDIA' => 'sec-media',
+                'BAIXA' => 'sec-baixa',
+                default => 'sec-outros',
+            };
+            flash('Contato fornecedor cadastrado com sucesso.', 'success');
+        }
+
         redirect_to('/supplier-contacts#' . $anchor);
     }
 
@@ -621,6 +649,7 @@ if (preg_match('#^/supplier-contacts/(\d+)/edit$#', $path, $matches)) {
         $telefone = trim((string) normalize_utf8_text((string) ($_POST['telefone'] ?? '')));
         $empresa = trim((string) normalize_utf8_text((string) ($_POST['empresa'] ?? '')));
         $aplicacoesReferencia = trim((string) normalize_utf8_text((string) ($_POST['aplicacoes_referencia'] ?? '')));
+        $bucket = $normalizeEscalacao($referenciaEscalacao);
 
         if ($nome === '') {
             flash('O nome é obrigatório.', 'danger');
@@ -634,27 +663,52 @@ if (preg_match('#^/supplier-contacts/(\d+)/edit$#', $path, $matches)) {
             exit;
         }
 
-        $stmt = $pdo->prepare('UPDATE supplier_contacts SET nome = ?, referencia_escalacao = ?, cargo_referencia = ?, email = ?, telefone = ?, empresa = ?, aplicacoes_referencia = ? WHERE id = ?');
-        $stmt->execute([
-            $nome,
-            $referenciaEscalacao !== '' ? $referenciaEscalacao : null,
-            $cargoReferencia !== '' ? $cargoReferencia : null,
-            $email !== '' ? $email : null,
-            $telefone !== '' ? $telefone : null,
-            $empresa !== '' ? $empresa : null,
-            $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
-            $id,
-        ]);
+        if ($bucket === 'SUPORTE') {
+            $observacaoParts = [];
+            if ($empresa !== '') {
+                $observacaoParts[] = 'Empresa: ' . $empresa;
+            }
+            if ($email !== '') {
+                $observacaoParts[] = 'E-mail: ' . $email;
+            }
 
-        $bucket = $normalizeEscalacao($referenciaEscalacao);
-        $anchor = match ($bucket) {
-            'ALTA' => 'sec-alta',
-            'MEDIA' => 'sec-media',
-            'BAIXA' => 'sec-baixa',
-            default => 'sec-outros',
-        };
+            $portalLink = (str_starts_with(strtolower($email), 'http://') || str_starts_with(strtolower($email), 'https://')) ? $email : null;
+            $observacao = implode(' | ', $observacaoParts);
 
-        flash('Contato fornecedor atualizado com sucesso.', 'success');
+            $pdo->prepare('INSERT INTO supplier_support_contacts (tipo, numero, fornecedor, aplicacao, observacao, portal_link) VALUES (?, ?, ?, ?, ?, ?)')->execute([
+                $cargoReferencia !== '' ? $cargoReferencia : null,
+                $telefone !== '' ? $telefone : null,
+                $nome,
+                $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
+                $observacao !== '' ? $observacao : null,
+                $portalLink,
+            ]);
+
+            $pdo->prepare('DELETE FROM supplier_contacts WHERE id = ?')->execute([$id]);
+            $anchor = 'sec-suporte';
+            flash('Contato movido para a lista de suporte com sucesso.', 'success');
+        } else {
+            $stmt = $pdo->prepare('UPDATE supplier_contacts SET nome = ?, referencia_escalacao = ?, cargo_referencia = ?, email = ?, telefone = ?, empresa = ?, aplicacoes_referencia = ? WHERE id = ?');
+            $stmt->execute([
+                $nome,
+                $referenciaEscalacao !== '' ? $referenciaEscalacao : null,
+                $cargoReferencia !== '' ? $cargoReferencia : null,
+                $email !== '' ? $email : null,
+                $telefone !== '' ? $telefone : null,
+                $empresa !== '' ? $empresa : null,
+                $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
+                $id,
+            ]);
+
+            $anchor = match ($bucket) {
+                'ALTA' => 'sec-alta',
+                'MEDIA' => 'sec-media',
+                'BAIXA' => 'sec-baixa',
+                default => 'sec-outros',
+            };
+            flash('Contato fornecedor atualizado com sucesso.', 'success');
+        }
+
         redirect_to('/supplier-contacts#' . $anchor);
     }
 
@@ -693,6 +747,127 @@ if (preg_match('#^/supplier-contacts/(\d+)/delete$#', $path, $matches) && $metho
 
     flash('Contato fornecedor não encontrado.', 'warning');
     redirect_to('/supplier-contacts');
+}
+
+if (preg_match('#^/supplier-support-contacts/(\d+)/edit$#', $path, $matches)) {
+    $id = (int) $matches[1];
+    $stmt = $pdo->prepare('SELECT * FROM supplier_support_contacts WHERE id = ?');
+    $stmt->execute([$id]);
+    $support = $stmt->fetch();
+
+    if (!$support) {
+        http_response_code(404);
+        exit('Contato de suporte não encontrado.');
+    }
+
+    if ($method === 'POST') {
+        verify_csrf();
+
+        $nome = trim((string) normalize_utf8_text((string) ($_POST['nome'] ?? '')));
+        $referenciaEscalacao = trim((string) normalize_utf8_text((string) ($_POST['referencia_escalacao'] ?? '')));
+        $cargoReferencia = trim((string) normalize_utf8_text((string) ($_POST['cargo_referencia'] ?? '')));
+        $email = trim((string) normalize_utf8_text((string) ($_POST['email'] ?? '')));
+        $telefone = trim((string) normalize_utf8_text((string) ($_POST['telefone'] ?? '')));
+        $empresa = trim((string) normalize_utf8_text((string) ($_POST['empresa'] ?? '')));
+        $aplicacoesReferencia = trim((string) normalize_utf8_text((string) ($_POST['aplicacoes_referencia'] ?? '')));
+        $bucket = $normalizeEscalacao($referenciaEscalacao);
+
+        if ($nome === '') {
+            flash('O nome é obrigatório.', 'danger');
+            render('contacts/suppliers_form', [
+                'title' => 'Editar Contato de Suporte',
+                'form' => $_POST,
+                'formAction' => "/supplier-support-contacts/{$id}/edit",
+                'cancelUrl' => '/supplier-contacts#sec-suporte',
+                'submitLabel' => 'Salvar alterações',
+            ]);
+            exit;
+        }
+
+        if ($bucket === 'SUPORTE') {
+            $observacaoParts = [];
+            if ($empresa !== '') {
+                $observacaoParts[] = 'Empresa: ' . $empresa;
+            }
+            if ($email !== '') {
+                $observacaoParts[] = 'E-mail: ' . $email;
+            }
+
+            $portalLink = (str_starts_with(strtolower($email), 'http://') || str_starts_with(strtolower($email), 'https://')) ? $email : null;
+            $observacao = implode(' | ', $observacaoParts);
+
+            $stmt = $pdo->prepare('UPDATE supplier_support_contacts SET tipo = ?, numero = ?, fornecedor = ?, aplicacao = ?, observacao = ?, portal_link = ? WHERE id = ?');
+            $stmt->execute([
+                $cargoReferencia !== '' ? $cargoReferencia : null,
+                $telefone !== '' ? $telefone : null,
+                $nome,
+                $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
+                $observacao !== '' ? $observacao : null,
+                $portalLink,
+                $id,
+            ]);
+
+            flash('Contato de suporte atualizado com sucesso.', 'success');
+            redirect_to('/supplier-contacts#sec-suporte');
+        }
+
+        $stmt = $pdo->prepare('INSERT INTO supplier_contacts (nome, referencia_escalacao, cargo_referencia, email, telefone, empresa, aplicacoes_referencia) VALUES (?, ?, ?, ?, ?, ?, ?)');
+        $stmt->execute([
+            $nome,
+            $referenciaEscalacao !== '' ? $referenciaEscalacao : null,
+            $cargoReferencia !== '' ? $cargoReferencia : null,
+            $email !== '' ? $email : null,
+            $telefone !== '' ? $telefone : null,
+            $empresa !== '' ? $empresa : null,
+            $aplicacoesReferencia !== '' ? $aplicacoesReferencia : null,
+        ]);
+        $pdo->prepare('DELETE FROM supplier_support_contacts WHERE id = ?')->execute([$id]);
+
+        $anchor = match ($bucket) {
+            'ALTA' => 'sec-alta',
+            'MEDIA' => 'sec-media',
+            'BAIXA' => 'sec-baixa',
+            default => 'sec-outros',
+        };
+
+        flash('Contato movido para a lista de fornecedores com sucesso.', 'success');
+        redirect_to('/supplier-contacts#' . $anchor);
+    }
+
+    $form = [
+        'nome' => $support['fornecedor'] ?? '',
+        'referencia_escalacao' => 'Suporte',
+        'cargo_referencia' => $support['tipo'] ?? '',
+        'email' => $support['portal_link'] ?? '',
+        'telefone' => $support['numero'] ?? '',
+        'empresa' => $support['observacao'] ?? '',
+        'aplicacoes_referencia' => $support['aplicacao'] ?? '',
+    ];
+
+    render('contacts/suppliers_form', [
+        'title' => 'Editar Contato de Suporte',
+        'form' => $form,
+        'formAction' => "/supplier-support-contacts/{$id}/edit",
+        'cancelUrl' => '/supplier-contacts#sec-suporte',
+        'submitLabel' => 'Salvar alterações',
+    ]);
+    exit;
+}
+
+if (preg_match('#^/supplier-support-contacts/(\d+)/delete$#', $path, $matches) && $method === 'POST') {
+    verify_csrf();
+    $id = (int) $matches[1];
+
+    $stmt = $pdo->prepare('DELETE FROM supplier_support_contacts WHERE id = ?');
+    $stmt->execute([$id]);
+
+    if ($stmt->rowCount() > 0) {
+        flash('Contato de suporte removido.', 'success');
+    } else {
+        flash('Contato de suporte não encontrado.', 'warning');
+    }
+
+    redirect_to('/supplier-contacts#sec-suporte');
 }
 
 if ($path === '/schedule') {

@@ -32,6 +32,7 @@
                         <option value="Média" <?= $ref === 'Média' ? 'selected' : '' ?>>Média</option>
                         <option value="Baixa" <?= $ref === 'Baixa' ? 'selected' : '' ?>>Baixa</option>
                         <option value="Outros" <?= $ref === 'Outros' ? 'selected' : '' ?>>Outros</option>
+                        <option value="Suporte" <?= $ref === 'Suporte' ? 'selected' : '' ?>>Contatos de Suporte</option>
                     </select>
                 </div>
                 <div>

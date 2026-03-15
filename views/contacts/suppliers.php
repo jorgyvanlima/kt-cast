@@ -18,7 +18,6 @@ function table_title(string $key): string
     <div class="bg-white shadow-md rounded p-4 border-l-4 border-blue-600 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
             <h2 class="text-xl font-bold text-gray-800">Contatos de Fornecedores</h2>
-            <p class="text-sm text-gray-600 mt-1">Dados carregados de: <strong>Contatos fornecedores Aplicações Estratégicas.xlsx</strong></p>
         </div>
         <a href="/supplier-contacts/new" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm inline-flex items-center w-fit">
             <i class="fas fa-plus mr-2"></i>Novo contato fornecedor
@@ -91,6 +90,7 @@ function table_title(string $key): string
                     <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Aplicação</th>
                     <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Observação</th>
                     <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Link do portal</th>
+                    <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -107,10 +107,21 @@ function table_title(string $key): string
                                     <a href="<?= h($row['portal_link']) ?>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 underline">Acessar</a>
                                 <?php endif; ?>
                             </td>
+                            <td class="table-actions px-3 py-3 border-b border-gray-200 whitespace-nowrap">
+                                <a href="/supplier-support-contacts/<?= h((string) $row['id']) ?>/edit" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar contato suporte">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form method="post" action="/supplier-support-contacts/<?= h((string) $row['id']) ?>/delete" class="inline" onsubmit="return confirm('Excluir este contato de suporte?');">
+                                    <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
+                                    <button type="submit" class="text-red-500 hover:text-red-700" title="Excluir contato suporte">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="6" class="px-5 py-8 text-center text-gray-500">Sem registros de suporte.</td></tr>
+                    <tr><td colspan="7" class="px-5 py-8 text-center text-gray-500">Sem registros de suporte.</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

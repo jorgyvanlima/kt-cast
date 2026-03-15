@@ -147,6 +147,9 @@
                     <li class="mobile-nav-item mr-1 md:mr-0 flex-1 md:flex-none"><a href="/sla" class="mobile-nav-link block py-2 md:py-3 px-3 text-white rounded-lg transition <?= active_menu('/sla') ? 'bg-white/10 text-white' : 'hover:bg-white/10' ?>"><i class="mobile-nav-icon fas fa-stopwatch pr-0 md:pr-3"></i><span class="text-[11px] md:text-base text-gray-200">SLA</span></a></li>
                     <li class="mobile-nav-item mr-1 md:mr-0 flex-1 md:flex-none"><a href="/logout" class="mobile-nav-link block py-2 md:py-3 px-3 text-white rounded-lg transition hover:bg-white/10"><i class="mobile-nav-icon fas fa-sign-out-alt pr-0 md:pr-3"></i><span class="text-[11px] md:text-base text-gray-200">Sair</span></a></li>
                 </ul>
+                <div class="hidden md:flex w-full justify-center mt-4 px-3 text-center text-xs font-medium tracking-wide text-blue-100/80">
+                    Desenvolvido por Jorgyvan Lima 
+                </div>
             </div>
         </div>
     </div>
