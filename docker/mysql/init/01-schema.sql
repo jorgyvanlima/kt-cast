@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS applications (
 CREATE TABLE IF NOT EXISTS contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    celular VARCHAR(30) NULL,
+    celular VARCHAR(255) NULL,
     email_cast VARCHAR(120) NULL,
     email_tereos VARCHAR(120) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS on_calls (
     id INT AUTO_INCREMENT PRIMARY KEY,
     contact_id INT NULL,
     analyst_name VARCHAR(100) NOT NULL,
-    phone VARCHAR(30) NULL,
+    phone VARCHAR(255) NULL,
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
     observation VARCHAR(255) NULL,

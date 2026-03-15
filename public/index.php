@@ -47,11 +47,22 @@ if ($path === '/' || $path === '/dashboard') {
     $contactCount = (int) $pdo->query('SELECT COUNT(*) FROM contacts')->fetchColumn();
     $scheduleCount = (int) $pdo->query('SELECT COUNT(*) FROM on_calls')->fetchColumn();
 
+    $today = date('Y-m-d');
+    $stmtToday = $pdo->prepare(
+        'SELECT analyst_name, phone, start_date, end_date, observation
+         FROM on_calls
+         WHERE DATE(start_date) <= :today AND DATE(end_date) >= :today2
+         ORDER BY start_date'
+    );
+    $stmtToday->execute([':today' => $today, ':today2' => $today]);
+    $todayOnCalls = $stmtToday->fetchAll();
+
     render('dashboard', [
         'title' => 'Dashboard',
         'appCount' => $appCount,
         'contactCount' => $contactCount,
         'scheduleCount' => $scheduleCount,
+        'todayOnCalls' => $todayOnCalls,
     ]);
     exit;
 }
@@ -617,6 +628,79 @@ if ($path === '/schedule') {
     $events = $pdo->query('SELECT * FROM on_calls ORDER BY start_date DESC')->fetchAll();
     render('schedule/index', ['title' => 'Sobreaviso', 'events' => $events]);
     exit;
+}
+
+// Editar sobreaviso
+if (preg_match('#^/schedule/(\d+)/edit$#', $path, $m)) {
+    $onCallId = (int) $m[1];
+    $contacts = all_contacts();
+
+    $stmtOc = $pdo->prepare('SELECT * FROM on_calls WHERE id = ?');
+    $stmtOc->execute([$onCallId]);
+    $onCall = $stmtOc->fetch();
+
+    if (!$onCall) {
+        flash('Registro não encontrado.', 'danger');
+        redirect_to('/schedule');
+    }
+
+    if ($method === 'POST') {
+        verify_csrf();
+        $contactId = (int) ($_POST['contact_id'] ?? 0);
+        $start = trim((string) ($_POST['start_date'] ?? '')) . ' ' . trim((string) ($_POST['start_time'] ?? '')) . ':00';
+        $end   = trim((string) ($_POST['end_date'] ?? '')) . ' ' . trim((string) ($_POST['end_time'] ?? '')) . ':00';
+
+        $contactStmt = $pdo->prepare('SELECT id, name, celular FROM contacts WHERE id = ?');
+        $contactStmt->execute([$contactId]);
+        $contact = $contactStmt->fetch();
+
+        if (!$contact) {
+            flash('Selecione um analista válido da tabela de contatos.', 'danger');
+            render('schedule/form', ['title' => 'Editar Escala', 'contacts' => $contacts, 'selectedContactId' => $contactId, 'onCall' => $onCall, 'editId' => $onCallId]);
+            exit;
+        }
+
+        if (strtotime($end) <= strtotime($start)) {
+            flash('A data/hora final deve ser maior que a inicial.', 'danger');
+            render('schedule/form', ['title' => 'Editar Escala', 'contacts' => $contacts, 'selectedContactId' => $contactId, 'onCall' => $onCall, 'editId' => $onCallId]);
+            exit;
+        }
+
+        $stmtUpd = $pdo->prepare('UPDATE on_calls SET contact_id=?, analyst_name=?, phone=?, start_date=?, end_date=?, observation=? WHERE id=?');
+        $stmtUpd->execute([
+            (int) $contact['id'],
+            trim((string) $contact['name']),
+            trim((string) ($contact['celular'] ?? '')),
+            $start,
+            $end,
+            trim((string) ($_POST['observation'] ?? '')),
+            $onCallId,
+        ]);
+        flash('Escala atualizada com sucesso.', 'success');
+        redirect_to('/schedule');
+    }
+
+    render('schedule/form', [
+        'title' => 'Editar Escala',
+        'contacts' => $contacts,
+        'selectedContactId' => (int) $onCall['contact_id'],
+        'onCall' => $onCall,
+        'editId' => $onCallId,
+    ]);
+    exit;
+}
+
+// Excluir sobreaviso
+if (preg_match('#^/schedule/(\d+)/delete$#', $path, $m)) {
+    if ($method !== 'POST') {
+        redirect_to('/schedule');
+    }
+    verify_csrf();
+    $onCallId = (int) $m[1];
+    $stmtDel = $pdo->prepare('DELETE FROM on_calls WHERE id = ?');
+    $stmtDel->execute([$onCallId]);
+    flash('Escala excluída com sucesso.', 'success');
+    redirect_to('/schedule');
 }
 
 if ($path === '/schedule/new') {

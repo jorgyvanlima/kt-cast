@@ -1,0 +1,7 @@
+SET NAMES utf8mb4;
+
+ALTER TABLE contacts
+    MODIFY COLUMN celular VARCHAR(255) NULL;
+
+ALTER TABLE on_calls
+    MODIFY COLUMN phone VARCHAR(255) NULL;
