@@ -164,6 +164,20 @@ function all_contacts(): array
     return db()->query('SELECT * FROM contacts ORDER BY name')->fetchAll();
 }
 
+function on_calls_has_contact_id(): bool
+{
+    static $hasColumn = null;
+
+    if ($hasColumn !== null) {
+        return $hasColumn;
+    }
+
+    $stmt = db()->query("SHOW COLUMNS FROM on_calls LIKE 'contact_id'");
+    $hasColumn = (bool) $stmt->fetch();
+
+    return $hasColumn;
+}
+
 function normalize_utf8_text(?string $value): ?string
 {
     if ($value === null) {

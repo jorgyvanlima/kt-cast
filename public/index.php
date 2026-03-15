@@ -634,6 +634,7 @@ if ($path === '/schedule') {
 if (preg_match('#^/schedule/(\d+)/edit$#', $path, $m)) {
     $onCallId = (int) $m[1];
     $contacts = all_contacts();
+    $hasContactIdColumn = on_calls_has_contact_id();
 
     $stmtOc = $pdo->prepare('SELECT * FROM on_calls WHERE id = ?');
     $stmtOc->execute([$onCallId]);
@@ -666,16 +667,28 @@ if (preg_match('#^/schedule/(\d+)/edit$#', $path, $m)) {
             exit;
         }
 
-        $stmtUpd = $pdo->prepare('UPDATE on_calls SET contact_id=?, analyst_name=?, phone=?, start_date=?, end_date=?, observation=? WHERE id=?');
-        $stmtUpd->execute([
-            (int) $contact['id'],
-            trim((string) $contact['name']),
-            trim((string) ($contact['celular'] ?? '')),
-            $start,
-            $end,
-            trim((string) ($_POST['observation'] ?? '')),
-            $onCallId,
-        ]);
+        if ($hasContactIdColumn) {
+            $stmtUpd = $pdo->prepare('UPDATE on_calls SET contact_id=?, analyst_name=?, phone=?, start_date=?, end_date=?, observation=? WHERE id=?');
+            $stmtUpd->execute([
+                (int) $contact['id'],
+                trim((string) $contact['name']),
+                trim((string) ($contact['celular'] ?? '')),
+                $start,
+                $end,
+                trim((string) ($_POST['observation'] ?? '')),
+                $onCallId,
+            ]);
+        } else {
+            $stmtUpd = $pdo->prepare('UPDATE on_calls SET analyst_name=?, phone=?, start_date=?, end_date=?, observation=? WHERE id=?');
+            $stmtUpd->execute([
+                trim((string) $contact['name']),
+                trim((string) ($contact['celular'] ?? '')),
+                $start,
+                $end,
+                trim((string) ($_POST['observation'] ?? '')),
+                $onCallId,
+            ]);
+        }
         flash('Escala atualizada com sucesso.', 'success');
         redirect_to('/schedule');
     }
@@ -683,7 +696,7 @@ if (preg_match('#^/schedule/(\d+)/edit$#', $path, $m)) {
     render('schedule/form', [
         'title' => 'Editar Escala',
         'contacts' => $contacts,
-        'selectedContactId' => (int) $onCall['contact_id'],
+        'selectedContactId' => (int) ($onCall['contact_id'] ?? 0),
         'onCall' => $onCall,
         'editId' => $onCallId,
     ]);
@@ -705,6 +718,7 @@ if (preg_match('#^/schedule/(\d+)/delete$#', $path, $m)) {
 
 if ($path === '/schedule/new') {
     $contacts = all_contacts();
+    $hasContactIdColumn = on_calls_has_contact_id();
 
     if ($method === 'POST') {
         verify_csrf();
@@ -728,15 +742,26 @@ if ($path === '/schedule/new') {
             exit;
         }
 
-        $stmt = $pdo->prepare('INSERT INTO on_calls (contact_id, analyst_name, phone, start_date, end_date, observation) VALUES (?, ?, ?, ?, ?, ?)');
-        $stmt->execute([
-            (int) $contact['id'],
-            trim((string) $contact['name']),
-            trim((string) ($contact['celular'] ?? '')),
-            $start,
-            $end,
-            trim((string) ($_POST['observation'] ?? '')),
-        ]);
+        if ($hasContactIdColumn) {
+            $stmt = $pdo->prepare('INSERT INTO on_calls (contact_id, analyst_name, phone, start_date, end_date, observation) VALUES (?, ?, ?, ?, ?, ?)');
+            $stmt->execute([
+                (int) $contact['id'],
+                trim((string) $contact['name']),
+                trim((string) ($contact['celular'] ?? '')),
+                $start,
+                $end,
+                trim((string) ($_POST['observation'] ?? '')),
+            ]);
+        } else {
+            $stmt = $pdo->prepare('INSERT INTO on_calls (analyst_name, phone, start_date, end_date, observation) VALUES (?, ?, ?, ?, ?)');
+            $stmt->execute([
+                trim((string) $contact['name']),
+                trim((string) ($contact['celular'] ?? '')),
+                $start,
+                $end,
+                trim((string) ($_POST['observation'] ?? '')),
+            ]);
+        }
         flash('Escala cadastrada com sucesso.', 'success');
         redirect_to('/schedule');
     }
