@@ -1,3 +1,13 @@
+<?php
+$pagination = $pagination ?? ['page' => 1, 'perPage' => 10, 'totalItems' => 0, 'totalPages' => 1, 'startItem' => 0, 'endItem' => 0];
+$currentPage = (int) ($pagination['page'] ?? 1);
+$totalPages = (int) ($pagination['totalPages'] ?? 1);
+$queryBase = [];
+if (!empty($search)) {
+    $queryBase['search'] = $search;
+}
+?>
+
 <div class="bg-white shadow-md rounded my-6 overflow-x-auto">
     <div class="p-4 flex justify-between items-center bg-gray-50 border-b">
         <h2 class="text-xl font-bold text-gray-800">Diretório de Aplicações</h2>
@@ -27,6 +37,17 @@
                 <?php endif; ?>
             </div>
         </form>
+    </div>
+    <div class="px-4 py-3 border-b bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-2 text-sm text-gray-600">
+        <div>
+            Exibindo <?= h((string) $pagination['startItem']) ?> a <?= h((string) $pagination['endItem']) ?> de <?= h((string) $pagination['totalItems']) ?> registros
+            <?php if (!empty($search)): ?>
+                para a busca "<?= h($search) ?>"
+            <?php endif; ?>
+        </div>
+        <div>
+            <?= h((string) $totalPages) ?> página(s) no total
+        </div>
     </div>
     <table class="min-w-full leading-normal text-xs">
         <thead>
@@ -86,3 +107,41 @@
         </tbody>
     </table>
 </div>
+
+<?php if ($totalPages > 1): ?>
+    <div class="flex flex-wrap items-center justify-center gap-2 mb-6 text-sm">
+        <?php if ($currentPage > 1): ?>
+            <a href="/applications?<?= h(http_build_query(array_merge($queryBase, ['page' => $currentPage - 1]))) ?>" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Anterior</a>
+        <?php endif; ?>
+
+        <?php
+        $startPage = max(1, $currentPage - 2);
+        $endPage = min($totalPages, $currentPage + 2);
+
+        if ($startPage > 1):
+        ?>
+            <a href="/applications?<?= h(http_build_query(array_merge($queryBase, ['page' => 1]))) ?>" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">1</a>
+            <?php if ($startPage > 2): ?>
+                <span class="px-1 text-gray-400">...</span>
+            <?php endif; ?>
+        <?php endif; ?>
+
+        <?php for ($pageNumber = $startPage; $pageNumber <= $endPage; $pageNumber++): ?>
+            <a href="/applications?<?= h(http_build_query(array_merge($queryBase, ['page' => $pageNumber]))) ?>"
+               class="px-3 py-2 rounded border <?= $pageNumber === $currentPage ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300 text-gray-700 hover:bg-gray-50' ?>">
+                <?= h((string) $pageNumber) ?>
+            </a>
+        <?php endfor; ?>
+
+        <?php if ($endPage < $totalPages): ?>
+            <?php if ($endPage < $totalPages - 1): ?>
+                <span class="px-1 text-gray-400">...</span>
+            <?php endif; ?>
+            <a href="/applications?<?= h(http_build_query(array_merge($queryBase, ['page' => $totalPages]))) ?>" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50"><?= h((string) $totalPages) ?></a>
+        <?php endif; ?>
+
+        <?php if ($currentPage < $totalPages): ?>
+            <a href="/applications?<?= h(http_build_query(array_merge($queryBase, ['page' => $currentPage + 1]))) ?>" class="px-3 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Próxima</a>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>

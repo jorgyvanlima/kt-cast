@@ -69,20 +69,91 @@ if ($path === '/' || $path === '/dashboard') {
 
 if ($path === '/applications') {
     $search = trim((string) ($_GET['search'] ?? ''));
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+    $perPage = 10;
+    $offset = ($page - 1) * $perPage;
+
+    $searchFields = [
+        'name',
+        'description',
+        'fila_cast',
+        'hora_entrada',
+        'hora_saida',
+        'hora_almoco',
+        'analista_cast_n2',
+        'analista_tereos_n2',
+        'n2_track',
+        'criticidade',
+        'operacoes_tereos',
+        'suporte_fornecedor',
+        'fornecedor',
+        'business_application_snow',
+    ];
 
     if ($search !== '') {
         $like = '%' . $search . '%';
-        $stmt = $pdo->prepare('SELECT * FROM applications WHERE name LIKE ? OR analista_cast_n2 LIKE ? OR analista_tereos_n2 LIKE ? OR n2_track LIKE ? OR fornecedor LIKE ? ORDER BY name');
-        $stmt->execute([$like, $like, $like, $like, $like]);
+        $whereParts = array_map(static fn (string $field): string => $field . ' LIKE ?', $searchFields);
+        $whereSql = implode(' OR ', $whereParts);
+        $params = array_fill(0, count($searchFields), $like);
+
+        $countStmt = $pdo->prepare('SELECT COUNT(*) FROM applications WHERE ' . $whereSql);
+        $countStmt->execute($params);
+        $totalApplications = (int) $countStmt->fetchColumn();
+
+        $stmt = $pdo->prepare('SELECT * FROM applications WHERE ' . $whereSql . ' ORDER BY name LIMIT ? OFFSET ?');
+        $paginatedParams = array_merge($params, [$perPage, $offset]);
+        foreach ($paginatedParams as $index => $value) {
+            $stmt->bindValue($index + 1, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+        }
+        $stmt->execute();
         $applications = $stmt->fetchAll();
     } else {
-        $applications = $pdo->query('SELECT * FROM applications ORDER BY name')->fetchAll();
+        $countStmt = $pdo->query('SELECT COUNT(*) FROM applications');
+        $totalApplications = (int) $countStmt->fetchColumn();
+
+        $stmt = $pdo->prepare('SELECT * FROM applications ORDER BY name LIMIT ? OFFSET ?');
+        $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $applications = $stmt->fetchAll();
     }
+
+    $totalPages = max(1, (int) ceil($totalApplications / $perPage));
+    if ($page > $totalPages) {
+        $page = $totalPages;
+        $offset = ($page - 1) * $perPage;
+
+        if ($search !== '') {
+            $stmt = $pdo->prepare('SELECT * FROM applications WHERE ' . $whereSql . ' ORDER BY name LIMIT ? OFFSET ?');
+            $paginatedParams = array_merge($params, [$perPage, $offset]);
+            foreach ($paginatedParams as $index => $value) {
+                $stmt->bindValue($index + 1, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+            }
+            $stmt->execute();
+            $applications = $stmt->fetchAll();
+        } else {
+            $stmt = $pdo->prepare('SELECT * FROM applications ORDER BY name LIMIT ? OFFSET ?');
+            $stmt->bindValue(1, $perPage, PDO::PARAM_INT);
+            $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+            $stmt->execute();
+            $applications = $stmt->fetchAll();
+        }
+    }
+
+    $pagination = [
+        'page' => $page,
+        'perPage' => $perPage,
+        'totalItems' => $totalApplications,
+        'totalPages' => $totalPages,
+        'startItem' => $totalApplications > 0 ? ($offset + 1) : 0,
+        'endItem' => min($offset + $perPage, $totalApplications),
+    ];
 
     render('applications/index', [
         'title' => 'Aplicações',
         'applications' => $applications,
         'search' => $search,
+        'pagination' => $pagination,
     ]);
     exit;
 }
