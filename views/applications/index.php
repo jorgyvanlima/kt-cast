@@ -8,10 +8,10 @@ if (!empty($search)) {
 }
 ?>
 
-<div class="bg-white shadow-md rounded my-6 overflow-x-auto">
-    <div class="p-4 flex justify-between items-center bg-gray-50 border-b">
+<div class="bg-white shadow-md rounded my-6 overflow-hidden">
+    <div class="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-50 border-b">
         <h2 class="text-xl font-bold text-gray-800">Diretório de Aplicações</h2>
-        <a href="/applications/new" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm inline-flex items-center">
+        <a href="/applications/new" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm inline-flex items-center w-full sm:w-auto justify-center">
             <i class="fas fa-plus mr-2"></i>Nova Aplicação
         </a>
     </div>
@@ -26,7 +26,7 @@ if (!empty($search)) {
                 placeholder="Buscar por nome, analista CAST, analista Tereos, esteira ou fornecedor"
                 class="w-full md:max-w-xl border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-            <div class="flex gap-2">
+            <div class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm">
                     Buscar
                 </button>
@@ -49,7 +49,8 @@ if (!empty($search)) {
             <?= h((string) $totalPages) ?> página(s) no total
         </div>
     </div>
-    <table class="min-w-full leading-normal text-xs">
+    <div class="overflow-x-auto">
+    <table class="table-stack min-w-full leading-normal text-xs">
         <thead>
             <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
                 <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Nome</th>
@@ -72,19 +73,19 @@ if (!empty($search)) {
         <?php if ($applications): ?>
             <?php foreach ($applications as $application): ?>
                 <tr class="hover:bg-gray-50">
-                    <td class="px-3 py-3 border-b border-gray-200 font-semibold text-gray-900 whitespace-nowrap"><?= h($application['name']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['fila_cast']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['hora_entrada']) ?><?= $application['hora_saida'] ? ' - ' . h($application['hora_saida']) : '' ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['hora_almoco']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['analista_cast_n2']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['analista_tereos_n2']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['n2_track']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['criticidade']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['operacoes_tereos']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['suporte_fornecedor']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['fornecedor']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200"><?= h($application['business_application_snow']) ?></td>
-                    <td class="px-3 py-3 border-b border-gray-200 text-center">
+                    <td data-label="Nome" class="px-3 py-3 border-b border-gray-200 font-semibold text-gray-900 whitespace-nowrap"><?= h($application['name']) ?></td>
+                    <td data-label="Fila CAST" class="px-3 py-3 border-b border-gray-200"><?= h($application['fila_cast']) ?></td>
+                    <td data-label="Entrada / Saída" class="px-3 py-3 border-b border-gray-200"><?= h($application['hora_entrada']) ?><?= $application['hora_saida'] ? ' - ' . h($application['hora_saida']) : '' ?></td>
+                    <td data-label="Almoço" class="px-3 py-3 border-b border-gray-200"><?= h($application['hora_almoco']) ?></td>
+                    <td data-label="Analista CAST N2" class="px-3 py-3 border-b border-gray-200"><?= h($application['analista_cast_n2']) ?></td>
+                    <td data-label="Analista Tereos N2" class="px-3 py-3 border-b border-gray-200"><?= h($application['analista_tereos_n2']) ?></td>
+                    <td data-label="Esteira" class="px-3 py-3 border-b border-gray-200"><?= h($application['n2_track']) ?></td>
+                    <td data-label="Criticidade" class="px-3 py-3 border-b border-gray-200"><?= h($application['criticidade']) ?></td>
+                    <td data-label="Operação Tereos" class="px-3 py-3 border-b border-gray-200"><?= h($application['operacoes_tereos']) ?></td>
+                    <td data-label="Suporte Fornecedor" class="px-3 py-3 border-b border-gray-200"><?= h($application['suporte_fornecedor']) ?></td>
+                    <td data-label="Fornecedor" class="px-3 py-3 border-b border-gray-200"><?= h($application['fornecedor']) ?></td>
+                    <td data-label="Business App (SNOW)" class="px-3 py-3 border-b border-gray-200"><?= h($application['business_application_snow']) ?></td>
+                    <td data-label="Documentação" class="px-3 py-3 border-b border-gray-200 text-center">
                         <a href="/applications/<?= h($application['id']) ?>/documents"
                            class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 hover:border-blue-400 rounded-lg px-3 py-1 text-xs font-medium transition-colors"
                            title="Ver documentos de <?= h($application['name']) ?>">
@@ -92,7 +93,7 @@ if (!empty($search)) {
                             <span class="hidden md:inline">Docs</span>
                         </a>
                     </td>
-                    <td class="px-3 py-3 border-b border-gray-200 whitespace-nowrap">
+                    <td class="table-actions px-3 py-3 border-b border-gray-200 whitespace-nowrap">
                         <a href="/applications/<?= h($application['id']) ?>/edit" class="text-blue-600 hover:text-blue-800 mr-3"><i class="fas fa-edit"></i></a>
                         <form method="post" action="/applications/<?= h($application['id']) ?>/delete" class="inline" onsubmit="return confirm('Remover aplicação?');">
                             <input type="hidden" name="csrf_token" value="<?= h(csrf_token()) ?>">
@@ -106,6 +107,7 @@ if (!empty($search)) {
         <?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>
 
 <?php if ($totalPages > 1): ?>

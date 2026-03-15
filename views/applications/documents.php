@@ -38,7 +38,7 @@ function doc_icon(string $filename): string {
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <div class="p-5 border-b" style="background: linear-gradient(135deg, #003366 0%, #004b99 100%);">
-            <div class="flex items-center gap-3">
+            <div class="flex items-start sm:items-center gap-3">
                 <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                     <i class="fas fa-folder-open text-white text-xl"></i>
                 </div>
@@ -101,7 +101,7 @@ function doc_icon(string $filename): string {
             <?php if ($documents): ?>
                 <div class="space-y-2">
                     <?php foreach ($documents as $doc): ?>
-                        <div class="flex items-center justify-between bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-4 py-3 transition-colors">
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg px-4 py-3 transition-colors">
                             <div class="flex items-center gap-3 min-w-0">
                                 <i class="fas <?= doc_icon($doc['original_name']) ?> text-2xl shrink-0"></i>
                                 <div class="min-w-0">
@@ -122,7 +122,7 @@ function doc_icon(string $filename): string {
                                     <?php endif; ?>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0 ml-4">
+                            <div class="flex flex-wrap items-center gap-2 shrink-0 sm:ml-4">
                                 <?php if (!empty($doc['stored_name'])): ?>
                                     <a href="/applications/<?= h($application['id']) ?>/documents/<?= h($doc['id']) ?>/download"
                                        class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 rounded px-3 py-1 text-xs font-medium transition-colors"

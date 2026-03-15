@@ -26,11 +26,12 @@ function table_title(string $key): string
     </div>
 
     <?php foreach (['alta', 'media', 'baixa', 'outros'] as $bucket): ?>
-        <div id="sec-<?= h($bucket) ?>" class="bg-white shadow-md rounded overflow-x-auto scroll-mt-24">
+        <div id="sec-<?= h($bucket) ?>" class="bg-white shadow-md rounded overflow-hidden scroll-mt-24">
             <div class="p-4 bg-gray-50 border-b">
                 <h3 class="font-semibold text-gray-800"><?= h(table_title($bucket)) ?> <span class="text-gray-500 text-sm">(<?= count($tables[$bucket]) ?>)</span></h3>
             </div>
-            <table class="min-w-full leading-normal text-xs">
+            <div class="overflow-x-auto">
+            <table class="table-stack min-w-full leading-normal text-xs">
                 <thead>
                     <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
                         <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Nome</th>
@@ -47,14 +48,14 @@ function table_title(string $key): string
                     <?php if (!empty($tables[$bucket])): ?>
                         <?php foreach ($tables[$bucket] as $row): ?>
                             <tr class="hover:bg-gray-50">
-                                <td class="px-3 py-3 border-b border-gray-200 font-semibold text-gray-900"><?= h($row['nome']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200"><?= h($row['referencia_escalacao']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200"><?= h($row['cargo_referencia']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200"><?= h($row['email']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200"><?= h($row['telefone']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200"><?= h($row['empresa']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200"><?= h($row['aplicacoes_referencia']) ?></td>
-                                <td class="px-3 py-3 border-b border-gray-200 whitespace-nowrap">
+                                <td data-label="Nome" class="px-3 py-3 border-b border-gray-200 font-semibold text-gray-900"><?= h($row['nome']) ?></td>
+                                <td data-label="Referência de escalação" class="px-3 py-3 border-b border-gray-200"><?= h($row['referencia_escalacao']) ?></td>
+                                <td data-label="Cargo/Referência" class="px-3 py-3 border-b border-gray-200"><?= h($row['cargo_referencia']) ?></td>
+                                <td data-label="E-mail" class="px-3 py-3 border-b border-gray-200"><?= h($row['email']) ?></td>
+                                <td data-label="Telefone/Celular" class="px-3 py-3 border-b border-gray-200"><?= h($row['telefone']) ?></td>
+                                <td data-label="Empresa" class="px-3 py-3 border-b border-gray-200"><?= h($row['empresa']) ?></td>
+                                <td data-label="Aplicações de referência" class="table-full px-3 py-3 border-b border-gray-200"><?= h($row['aplicacoes_referencia']) ?></td>
+                                <td class="table-actions px-3 py-3 border-b border-gray-200 whitespace-nowrap">
                                     <a href="/supplier-contacts/<?= h($row['id']) ?>/edit" class="text-blue-600 hover:text-blue-800 mr-3" title="Editar contato">
                                         <i class="fas fa-edit"></i>
                                     </a>
@@ -72,14 +73,16 @@ function table_title(string $key): string
                     <?php endif; ?>
                 </tbody>
             </table>
+            </div>
         </div>
     <?php endforeach; ?>
 
-    <div id="sec-suporte" class="bg-white shadow-md rounded overflow-x-auto scroll-mt-24">
+    <div id="sec-suporte" class="bg-white shadow-md rounded overflow-hidden scroll-mt-24">
         <div class="p-4 bg-gray-50 border-b">
             <h3 class="font-semibold text-gray-800"><?= h(table_title('suporte')) ?> <span class="text-gray-500 text-sm">(<?= count($tables['suporte']) ?>)</span></h3>
         </div>
-        <table class="min-w-full leading-normal text-xs">
+        <div class="overflow-x-auto">
+        <table class="table-stack min-w-full leading-normal text-xs">
             <thead>
                 <tr class="bg-gray-100 text-gray-600 uppercase text-xs">
                     <th class="px-3 py-3 border-b-2 border-gray-200 text-left">Tipo</th>
@@ -94,12 +97,12 @@ function table_title(string $key): string
                 <?php if (!empty($tables['suporte'])): ?>
                     <?php foreach ($tables['suporte'] as $row): ?>
                         <tr class="hover:bg-gray-50">
-                            <td class="px-3 py-3 border-b border-gray-200"><?= h($row['tipo']) ?></td>
-                            <td class="px-3 py-3 border-b border-gray-200"><?= h($row['numero']) ?></td>
-                            <td class="px-3 py-3 border-b border-gray-200 font-semibold text-gray-900"><?= h($row['fornecedor']) ?></td>
-                            <td class="px-3 py-3 border-b border-gray-200"><?= h($row['aplicacao']) ?></td>
-                            <td class="px-3 py-3 border-b border-gray-200"><?= h($row['observacao']) ?></td>
-                            <td class="px-3 py-3 border-b border-gray-200">
+                            <td data-label="Tipo" class="px-3 py-3 border-b border-gray-200"><?= h($row['tipo']) ?></td>
+                            <td data-label="Número" class="px-3 py-3 border-b border-gray-200"><?= h($row['numero']) ?></td>
+                            <td data-label="Fornecedor" class="px-3 py-3 border-b border-gray-200 font-semibold text-gray-900"><?= h($row['fornecedor']) ?></td>
+                            <td data-label="Aplicação" class="px-3 py-3 border-b border-gray-200"><?= h($row['aplicacao']) ?></td>
+                            <td data-label="Observação" class="table-full px-3 py-3 border-b border-gray-200"><?= h($row['observacao']) ?></td>
+                            <td data-label="Link do portal" class="px-3 py-3 border-b border-gray-200">
                                 <?php if (!empty($row['portal_link'])): ?>
                                     <a href="<?= h($row['portal_link']) ?>" target="_blank" rel="noopener" class="text-blue-600 hover:text-blue-800 underline">Acessar</a>
                                 <?php endif; ?>
@@ -111,5 +114,6 @@ function table_title(string $key): string
                 <?php endif; ?>
             </tbody>
         </table>
+        </div>
     </div>
 </div>

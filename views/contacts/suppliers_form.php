@@ -6,8 +6,8 @@
 ?>
 
 <div class="max-w-3xl mx-auto">
-    <div class="bg-white shadow-md rounded p-6">
-        <div class="flex items-center justify-between mb-6">
+    <div class="bg-white shadow-md rounded p-5 sm:p-6 overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
             <h2 class="text-xl font-bold text-gray-800">Novo Contato Fornecedor</h2>
             <a href="/supplier-contacts" class="text-blue-600 hover:text-blue-800 text-sm inline-flex items-center">
                 <i class="fas fa-arrow-left mr-1"></i>Voltar
@@ -62,11 +62,11 @@
                 </div>
             </div>
 
-            <div class="pt-2 flex gap-2">
+            <div class="pt-2 flex flex-col-reverse sm:flex-row gap-2">
                 <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm inline-flex items-center">
                     <i class="fas fa-save mr-2"></i><?= h($submitLabel ?? 'Salvar contato') ?>
                 </button>
-                <a href="<?= h($cancelUrl ?? '/supplier-contacts') ?>" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm">Cancelar</a>
+                <a href="<?= h($cancelUrl ?? '/supplier-contacts') ?>" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded text-sm text-center">Cancelar</a>
             </div>
         </form>
     </div>
